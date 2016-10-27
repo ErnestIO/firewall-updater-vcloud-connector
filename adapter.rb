@@ -11,8 +11,6 @@ require 'myst'
 include Myst::Providers::VCloud
 
 def update_firewall(data)
-  return false unless data[:firewall_type] == 'vcloud' && firewall_values(data) == 3
-
   credentials = data[:datacenter_username].split('@')
   provider = Provider.new(endpoint:     data[:vcloud_url],
                           organisation: credentials.last,
@@ -25,7 +23,7 @@ def update_firewall(data)
   firewall = router.firewall
   firewall.purge_rules
 
-  data[:firewall_rules].each do |rule|
+  data[:rules].each do |rule|
     firewall.add_rule({ ip: rule[:source_ip], port_range: rule[:source_port] },
                       { ip: rule[:destination_ip], port_range: rule[:destination_port] }, rule[:protocol].to_sym)
   end
@@ -37,10 +35,6 @@ rescue => e
   puts e
   puts e.backtrace
   'firewall.update.vcloud.error'
-end
-
-def firewall_values(data)
-  data.values_at(:datacenter_name, :client_name, :router_name).compact.length
 end
 
 unless defined? @@test
